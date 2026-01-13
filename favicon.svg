@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FF8A3D"/>
-      <stop offset="100%" style="stop-color:#FF6B6B"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="8" fill="url(#grad)"/>
-  <text x="16" y="22" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">F</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Fundo escuro preenchendo TODO o canvas -->
+  <rect x="0" y="0" width="512" height="512" fill="#020617"/>
+  
+  <!-- Contorno laranja com bordas arredondadas -->
+  <rect x="20" y="20" width="472" height="472" rx="40" ry="40" fill="none" stroke="#FF8A3D" stroke-width="8"/>
+  
+  <!-- Letra F em laranja -->
+  <text x="256" y="340" font-family="Arial, Helvetica, sans-serif" font-size="320" font-weight="bold" fill="#FF8A3D" text-anchor="middle">F</text>
 </svg>
