@@ -328,7 +328,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
               <StatCard
                 title="A Vencer"
                 value={`R$ ${formatNumber(data.filter(i => i.status === 'A Vencer').reduce((acc, curr) => acc + curr.numericVal, 0))}`}
-                pill={`${data.filter(i => i.status === 'A Vencer').length} contratos`}
+                pill={`${data.filter(i => i.status === 'A Vencer').length} ${data.filter(i => i.status === 'A Vencer').length === 1 ? 'Parcela' : 'Parcelas'}`}
                 icon="calendar_clock"
                 iconColor="text-orange-500"
                 iconBg="bg-orange-500/10"
