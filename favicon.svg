@@ -1,10 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Fundo escuro preenchendo TODO o canvas -->
-  <rect x="0" y="0" width="512" height="512" fill="#020617"/>
+  <!-- Fundo laranja preenchendo TODO o canvas -->
+  <rect x="0" y="0" width="512" height="512" fill="#FF8A3D"/>
   
-  <!-- Contorno laranja com bordas arredondadas -->
-  <rect x="20" y="20" width="472" height="472" rx="40" ry="40" fill="none" stroke="#FF8A3D" stroke-width="8"/>
-  
-  <!-- Letra F em laranja -->
-  <text x="256" y="340" font-family="Arial, Helvetica, sans-serif" font-size="320" font-weight="bold" fill="#FF8A3D" text-anchor="middle">F</text>
+  <!-- Letra F em escuro, centralizada -->
+  <text x="256" y="370" font-family="Arial, Helvetica, sans-serif" font-size="380" font-weight="bold" fill="#020617" text-anchor="middle">F</text>
 </svg>
