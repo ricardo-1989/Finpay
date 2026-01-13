@@ -55,11 +55,55 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
     loadData();
   }, []);
 
+  // Função para converter data no formato DD/MM/YYYY para objeto Date
+  const parseDate = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Mês é 0-indexed
+      const year = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+    return null;
+  };
+
+  // Função para verificar e atualizar status de clientes atrasados
+  const checkAndUpdateOverdueStatus = (clients: FinanceItem[]): FinanceItem[] => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Zera horas para comparar apenas data
+
+    return clients.map(client => {
+      // Só atualiza se o status atual for "A Vencer"
+      if (client.status === 'A Vencer') {
+        const dueDate = parseDate(client.date);
+        if (dueDate && dueDate < today) {
+          // Data de vencimento já passou - marcar como Atrasado
+          return {
+            ...client,
+            status: 'Atrasado',
+            color: 'red'
+          };
+        }
+      }
+      return client;
+    });
+  };
+
   const loadData = () => {
     const savedData = localStorage.getItem('finpay_clients');
     if (savedData) {
       try {
-        setData(JSON.parse(savedData));
+        let parsedData = JSON.parse(savedData);
+        // Verifica e atualiza automaticamente status de clientes atrasados
+        const updatedData = checkAndUpdateOverdueStatus(parsedData);
+
+        // Se houve alguma atualização, salva no localStorage
+        if (JSON.stringify(parsedData) !== JSON.stringify(updatedData)) {
+          localStorage.setItem('finpay_clients', JSON.stringify(updatedData));
+        }
+
+        setData(updatedData);
       } catch (e) {
         console.error("Erro ao carregar dados:", e);
         setData([]);
