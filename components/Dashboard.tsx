@@ -54,7 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewChange }) => {
           </div>
           <div className="relative">
             <div className="size-10 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden ring-2 ring-primary/5 transition-all group-hover:ring-primary/20">
-              <img src="https://i.pravatar.cc/150?u=admin-finpay-new" alt="Admin Avatar" className="w-full h-full object-cover" />
+              <img src="/admin-avatar.png" alt="Admin Avatar" className="w-full h-full object-cover" />
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 size-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full"></div>
           </div>
