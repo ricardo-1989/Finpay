@@ -7,7 +7,7 @@ const SecuritySettings: React.FC = () => {
    const [isExporting, setIsExporting] = useState(false);
    const [isImporting, setIsImporting] = useState(false);
    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-   const { addClient } = useClients(); // Get addClient
+   const { addClient, migrateLocalStorage } = useClients(); // Get addClient, migrateLocalStorage
 
    const exportBackup = () => {
       setIsExporting(true);
@@ -193,6 +193,27 @@ const SecuritySettings: React.FC = () => {
                   </div>
                </div>
 
+            </div>
+
+            <div className="bg-rose-50 dark:bg-rose-900/10 p-6 rounded-2xl border border-rose-200 dark:border-rose-900/30 flex flex-col md:flex-row items-center justify-between gap-6 transition-all">
+               <div className="flex items-center gap-4">
+                  <div className="p-3 bg-rose-100 dark:bg-rose-800/30 rounded-xl text-rose-600 dark:text-rose-400">
+                     <span className="material-symbols-outlined text-2xl">history</span>
+                  </div>
+                  <div>
+                     <h4 className="font-bold text-slate-900 dark:text-white text-lg">Migrar Dados Antigos</h4>
+                     <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+                        Seus dados não apareceram após a atualização? Clique aqui para tentar recuperar automaticamente do navegador.
+                     </p>
+                  </div>
+               </div>
+               <button
+                  onClick={migrateLocalStorage}
+                  className="whitespace-nowrap px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-rose-600/20 active:scale-95 transition-all flex items-center gap-2"
+               >
+                  <span className="material-symbols-outlined">restore_page</span>
+                  RECUPERAR DADOS ANTIGOS
+               </button>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-center gap-6">
