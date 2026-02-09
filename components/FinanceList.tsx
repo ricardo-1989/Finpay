@@ -23,7 +23,6 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
     totalReceived,
     totalPending,
     totalLate,
-    migrateLocalStorage
   } = useClients();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -214,13 +213,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
                 <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Controle financeiro real dos seus clientes.</p>
               </div>
               <div className="flex gap-3">
-                {/* Migration Button */}
-                <button
-                  onClick={migrateLocalStorage}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold uppercase rounded-xl hover:bg-slate-200 transition-colors"
-                >
-                  Importar LocalStorage
-                </button>
+
 
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 <button
