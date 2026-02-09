@@ -187,30 +187,64 @@ function useClients() {
 
     // Migration Utility
     const migrateLocalStorage = async () => {
+        if (!session?.user) {
+            alert('ERRO: Você precisa estar logado para migrar seus dados! Faça login e tente novamente.');
+            return;
+        }
+
         const savedData = localStorage.getItem('finpay_clients');
         if (!savedData) {
-            alert('Nenhum dado local encontrado para migrar.');
+            alert('ATENÇÃO: Nenhum dado antigo foi encontrado NESTE navegador/endereço.\n\nSe você usava o sistema em outro lugar (ex: localhost ou outro link), acesse o endereço antigo, vá em "Segurança", EXPORTE o backup e import aqui.');
             return;
         }
 
         const localClients = JSON.parse(savedData);
-        if (!confirm(`Encontrados ${localClients.length} clientes locais. Deseja fazer upload para o Supabase?`)) return;
+        if (!confirm(`ENCONTRADOS: ${localClients.length} clientes na memória deste navegador.\n\nDeseja enviar eles para o banco de dados agora?`)) return;
 
         let successCount = 0;
+        let failCount = 0;
+
+        setIsLoading(true);
+
         for (const c of localClients) {
             try {
-                // Remove ID to let DB generate a new one, fix date format
+                // Tenta corrigir formatos antigos
+                let finalNumericVal = c.numericVal;
+                if (!finalNumericVal && c.val) {
+                    // Tenta extrair de "R$ 1.200,00"
+                    const cleanVal = c.val.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+                    finalNumericVal = parseFloat(cleanVal) || 0;
+                }
+
+                let finalDueDate = c.date; // Esperado DD/MM/YYYY
+                // Se já estiver em YYYY-MM-DD (ISO), o formatDateToISO vai falhar (retornar null), então precisamos tratar
+                if (c.date && c.date.includes('-')) {
+                    // Assume que já é ISO, converte para DD/MM/YYYY só pra passar no helper ou ajusta lógica
+                    // Melhor: criar um helper interno aqui ou ajustar o addClient. 
+                    // Vamos garantir que passa no formato DD/MM/YYYY para o addClient
+                    const [y, m, d] = c.date.split('-');
+                    if (y.length === 4) finalDueDate = `${d}/${m}/${y}`;
+                }
+
                 await addClient({
                     ...c,
-                    id: undefined // Ensure we don't send the old ID
+                    id: undefined, // Garante gerar novo ID
+                    numericVal: finalNumericVal,
+                    date: finalDueDate,
+                    // Garante campos mínimos
+                    name: c.name || 'Cliente Sem Nome',
+                    status: c.status || 'A Vencer'
                 });
                 successCount++;
-            } catch (e) {
+            } catch (e: any) {
                 console.error('Falha ao migrar cliente:', c.name, e);
+                failCount++;
             }
         }
-        alert(`Migração concluída! ${successCount}/${localClients.length} importados.`);
-        fetchClients();
+
+        setIsLoading(false);
+        alert(`FIM DA MIGRAÇÃO:\n\n✅ Sucesso: ${successCount}\n❌ Falhas: ${failCount}\n\nSeus dados devem aparecer na lista agora!`);
+        window.location.reload(); // Recarrega para garantir atualização visual
     };
 
     return {
