@@ -11,7 +11,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ onViewChange }) => {
   const [currentDateStr, setCurrentDateStr] = useState('');
-  const { clients, totalReceived, totalPending, totalLate } = useClients();
+  const { clients, totalReceived, totalPending, totalLate, migrateLocalStorage } = useClients();
 
   // Meta padrão baseada nos dados ou meta fixa do usuário
   const goal = 100000;
@@ -63,6 +63,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewChange }) => {
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F2F5F7] dark:bg-slate-900 transition-colors">
         <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
+
+          {/* ÁREA DE RECUPERAÇÃO DE DADOS - TEMPORÁRIO */}
+          <div className="bg-rose-100 border-l-4 border-rose-500 text-rose-700 p-6 rounded-r-lg shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 animate-bounce-slow">
+            <div>
+              <p className="font-bold text-lg flex items-center gap-2"><span className="material-symbols-outlined">warning</span> SEUS DADOS SUMIRAM?</p>
+              <p className="text-sm">Isso é normal! Mudamos para um banco seguro na nuvem. Seus dados antigos ainda estão aqui.</p>
+            </div>
+            <button
+              onClick={migrateLocalStorage}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-black py-4 px-8 rounded-xl shadow-xl active:scale-95 transition-all text-sm uppercase tracking-wider flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined">restore</span>
+              CLIQUE AQUI PARA RECUPERAR TUDO
+            </button>
+          </div>
 
           <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50">
             <div className="flex justify-between items-center mb-4">

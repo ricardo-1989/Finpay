@@ -1,40 +1,32 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { GoogleGenAI } from "@google/genai";
 import StatCard from './ui/StatCard';
 import { formatNumber } from '../utils/formatters';
+import useClients, { Client } from '../hooks/useClients'; // Import from new Hook
 
-interface FinanceItem {
-  id: number;
-  initials: string;
-  name: string;
-  cpf: string;
-  lot: string;
-  parcel: string;
-  date: string;
-  val: string;
-  numericVal: number;
-  status: string;
-  color: string;
-  photo?: string | null;
-  // Campos adicionais para evitar perda de dados na edição
-  phone?: string;
-  email?: string;
-  address?: string;
-  notes?: string;
-  developmentName?: string;
-  originalDueDate?: string;
-}
+// Re-export specific interface if locally needed or just use Client
+type FinanceItem = Client;
 
 interface FinanceListProps {
   onOpenWhatsApp: (clientId: number) => void;
 }
 
 const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
+  const {
+    clients: data,
+    isLoading,
+    updateClient,
+    deleteClient,
+    totalReceived,
+    totalPending,
+    totalLate,
+    migrateLocalStorage
+  } = useClients();
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [data, setData] = useState<FinanceItem[]>([]);
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
   const [reconciliationModal, setReconciliationModal] = useState<{
     show: boolean;
@@ -50,76 +42,6 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Função para converter data no formato DD/MM/YYYY para objeto Date
-  const parseDate = (dateStr: string): Date | null => {
-    if (!dateStr) return null;
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // Mês é 0-indexed
-      const year = parseInt(parts[2], 10);
-      return new Date(year, month, day);
-    }
-    return null;
-  };
-
-  // Função para verificar e atualizar status de clientes atrasados
-  const checkAndUpdateOverdueStatus = (clients: FinanceItem[]): FinanceItem[] => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Zera horas para comparar apenas data
-
-    return clients.map(client => {
-      // Só atualiza se o status atual for "A Vencer"
-      if (client.status === 'A Vencer') {
-        const dueDate = parseDate(client.date);
-        if (dueDate && dueDate < today) {
-          // Data de vencimento já passou - marcar como Atrasado
-          return {
-            ...client,
-            status: 'Atrasado',
-            color: 'red'
-          };
-        }
-      }
-      return client;
-    });
-  };
-
-  const loadData = () => {
-    const savedData = localStorage.getItem('finpay_clients');
-    if (savedData) {
-      try {
-        let parsedData = JSON.parse(savedData);
-        // Verifica e atualiza automaticamente status de clientes atrasados
-        const updatedData = checkAndUpdateOverdueStatus(parsedData);
-
-        // Se houve alguma atualização, salva no localStorage
-        if (JSON.stringify(parsedData) !== JSON.stringify(updatedData)) {
-          localStorage.setItem('finpay_clients', JSON.stringify(updatedData));
-        }
-
-        setData(updatedData);
-      } catch (e) {
-        console.error("Erro ao carregar dados:", e);
-        setData([]);
-      }
-    }
-  };
-
-  const saveData = (newData: FinanceItem[]) => {
-    try {
-      localStorage.setItem('finpay_clients', JSON.stringify(newData));
-      setData(newData);
-    } catch (e) {
-      console.error("Erro ao salvar no localStorage:", e);
-      alert("Erro ao salvar dados. Pode ser que o armazenamento esteja cheio (limite de fotos).");
-    }
-  };
 
   const filteredData = data.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -178,19 +100,18 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
     reader.readAsDataURL(file);
   };
 
-  const confirmReconciliation = () => {
+  const confirmReconciliation = async () => {
     if (reconciliationModal.matchedClient) {
-      const updatedData = data.map(item =>
-        item.id === reconciliationModal.matchedClient?.id
-          ? { ...item, status: "Pago", color: "teal" }
-          : item
-      );
-      saveData(updatedData);
+      await updateClient({
+        ...reconciliationModal.matchedClient,
+        status: "Pago",
+        color: "teal"
+      });
       setReconciliationModal({ show: false });
     }
   };
 
-  const generateReceipt = (item: any) => {
+  const generateReceipt = (item: FinanceItem) => {
     const doc = new jsPDF();
     doc.setFillColor(15, 61, 62);
     doc.rect(0, 0, 210, 40, 'F');
@@ -246,7 +167,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
     });
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editModal.client) return;
 
@@ -265,19 +186,21 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
       color: statusColor
     };
 
-    const updatedData = data.map(item => item.id === updatedItem.id ? updatedItem : item);
-    saveData(updatedData);
+    await updateClient(updatedItem);
     setEditModal({ show: false, client: null });
   };
 
-  const handleDeleteClient = () => {
+  const handleDeleteClient = async () => {
     if (!editModal.client) return;
     if (confirm(`Deseja realmente excluir o lançamento de ${editModal.client.name}?`)) {
-      const updatedData = data.filter(item => item.id !== editModal.client?.id);
-      saveData(updatedData);
+      await deleteClient(editModal.client.id);
       setEditModal({ show: false, client: null });
     }
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-500">Carregando dados financeiros...</div>;
+  }
 
   return (
     <div className="flex-1 w-full h-full flex flex-col overflow-hidden bg-background-light dark:bg-slate-900 transition-colors">
@@ -291,6 +214,14 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
                 <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Controle financeiro real dos seus clientes.</p>
               </div>
               <div className="flex gap-3">
+                {/* Migration Button */}
+                <button
+                  onClick={migrateLocalStorage}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold uppercase rounded-xl hover:bg-slate-200 transition-colors"
+                >
+                  Importar LocalStorage
+                </button>
+
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -309,7 +240,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <StatCard
                 title="Total Recebido"
-                value={`R$ ${formatNumber(data.filter(i => i.status === 'Pago').reduce((acc, curr) => acc + curr.numericVal, 0))}`}
+                value={`R$ ${formatNumber(totalReceived)}`}
                 pill="Atualizado"
                 icon="payments"
                 iconColor="text-emerald-500"
@@ -318,7 +249,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
               />
               <StatCard
                 title="Total em Atraso"
-                value={`R$ ${formatNumber(data.filter(i => i.status === 'Atrasado').reduce((acc, curr) => acc + curr.numericVal, 0))}`}
+                value={`R$ ${formatNumber(totalLate)}`}
                 pill="Risco"
                 icon="error"
                 iconColor="text-rose-500"
@@ -327,8 +258,8 @@ const FinanceList: React.FC<FinanceListProps> = ({ onOpenWhatsApp }) => {
               />
               <StatCard
                 title="A Vencer"
-                value={`R$ ${formatNumber(data.filter(i => i.status === 'A Vencer').reduce((acc, curr) => acc + curr.numericVal, 0))}`}
-                pill={`${data.filter(i => i.status === 'A Vencer').length} ${data.filter(i => i.status === 'A Vencer').length === 1 ? 'Parcela' : 'Parcelas'}`}
+                value={`R$ ${formatNumber(totalPending)}`}
+                pill="Próximos"
                 icon="calendar_clock"
                 iconColor="text-orange-500"
                 iconBg="bg-orange-500/10"

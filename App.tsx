@@ -14,8 +14,11 @@ import Comparison from './components/Comparison';
 import Sidebar from './components/layout/Sidebar';
 import MobileNavbar from './components/layout/MobileNavbar';
 
+import useClients from './hooks/useClients'; // Importado
+
 const App: React.FC = () => {
   const { session, loading, signOut } = useAuth();
+  const { migrateLocalStorage } = useClients(); // Hook de clientes
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.DASHBOARD);
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -129,7 +132,17 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background-light dark:bg-slate-900 transition-colors duration-300">
+    <div className="flex h-screen w-full overflow-hidden bg-background-light dark:bg-slate-900 transition-colors duration-300 relative">
+      {/* Botão de Emergência Flutuante */}
+      <button
+        onClick={migrateLocalStorage}
+        className="fixed bottom-4 right-4 z-[9999] bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-full shadow-2xl animate-bounce border-4 border-white flex items-center gap-2"
+        title="Clique aqui se seus dados sumiram"
+      >
+        <span className="material-symbols-outlined text-3xl">warning</span>
+        <span className="text-sm uppercase font-black">Recuperar Dados Antigos</span>
+      </button>
+
       {/* Mobile overlay */}
       {isMobile && isSidebarOpen && (
         <div
